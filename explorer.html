@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeteoSync - Data Explorer</title>
+    <!-- Import Google's Modern 'Inter' Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Modern Dark Theme Color Palette */
+        :root {
+            --bg-base: #020617;
+            --bg-surface: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-blue: #3b82f6;
+            --accent-emerald: #10b981;
+            --accent-rose: #ef4444;
+            --accent-amber: #f59e0b;
+            --border-color: #334155;
+        }
+
+        body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background-color: var(--bg-base); color: var(--text-primary); display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sleek Sidebar Navigation */
+        .sidebar { width: 260px; background-color: var(--bg-surface); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 30px 20px; box-sizing: border-box; }
+        .sidebar-brand { font-size: 22px; font-weight: 700; background: linear-gradient(to right, var(--accent-blue), #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 40px; padding-left: 10px;}
+        .nav-link { display: flex; align-items: center; padding: 14px 16px; color: var(--text-secondary); text-decoration: none; border-radius: 8px; font-weight: 500; margin-bottom: 8px; transition: all 0.3s ease; }
+        .nav-link:hover { background-color: rgba(59, 130, 246, 0.05); color: var(--text-primary); }
+        .nav-link.active { background-color: rgba(59, 130, 246, 0.15); color: var(--accent-blue); font-weight: 600; border-left: 3px solid var(--accent-blue); }
+        .spacer { flex-grow: 1; }
+        .logout-btn { width: 100%; padding: 12px; background: rgba(239, 68, 68, 0.05); color: var(--accent-rose); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .logout-btn:hover { background: var(--accent-rose); color: white; border-color: var(--accent-rose);}
+
+        /* Main Content Area */
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; padding: 40px 60px; box-sizing: border-box; overflow: hidden;}
+        
+        .header { margin-bottom: 30px; animation: fadeInDown 0.5s ease; }
+        .header h2 { margin: 0 0 8px 0; font-size: 28px; font-weight: 700; }
+        .header p { margin: 0; color: var(--text-secondary); font-size: 15px;}
+
+        /* Advanced Toolbar */
+        .toolbar { background-color: var(--bg-card); padding: 20px; border: 1px solid var(--border-color); border-bottom: none; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; animation: fadeInUp 0.5s ease;}
+        
+        .search-box { position: relative; flex: 1; min-width: 250px; }
+        .search-box input { width: 100%; padding: 12px 12px 12px 40px; background-color: var(--bg-base); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 14px; box-sizing: border-box; outline: none; transition: border-color 0.3s;}
+        .search-box input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+        .search-icon { position: absolute; left: 14px; top: 12px; font-size: 16px;}
+        
+        .filters { display: flex; gap: 12px; align-items: center; flex-wrap: wrap;}
+        .filters select, .filters input[type="date"] { padding: 12px 16px; background-color: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 8px; font-size: 14px; outline: none; cursor: pointer; color-scheme: dark;}
+        .filters select:focus, .filters input[type="date"]:focus { border-color: var(--accent-blue); }
+        
+        .export-group { display: flex; gap: 10px; }
+        .btn { padding: 12px 20px; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px; transition: all 0.3s; letter-spacing: 0.5px;}
+        .btn-csv { background-color: rgba(16, 185, 129, 0.1); color: var(--accent-emerald); border: 1px solid rgba(16, 185, 129, 0.3); } 
+        .btn-csv:hover { background-color: var(--accent-emerald); color: white;}
+        .btn-json { background-color: rgba(59, 130, 246, 0.1); color: var(--accent-blue); border: 1px solid rgba(59, 130, 246, 0.3); } 
+        .btn-json:hover { background-color: var(--accent-blue); color: white;}
+
+        /* Enterprise Data Grid */
+        .table-wrapper { flex-grow: 1; overflow-y: auto; background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 0; animation: fadeInUp 0.6s ease; scrollbar-width: thin; scrollbar-color: var(--border-color) var(--bg-card);}
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; min-width: 1000px; }
+        th { background-color: var(--bg-surface); color: var(--text-secondary); font-weight: 600; padding: 16px 20px; border-bottom: 1px solid var(--border-color); text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+        td { padding: 16px 20px; border-bottom: 1px solid var(--border-color); color: var(--text-primary); white-space: nowrap; font-variant-numeric: tabular-nums;}
+        tr:hover { background-color: rgba(255,255,255,0.02); }
+        
+        /* Modern Badging System */
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid transparent;}
+        .badge-hot { background-color: rgba(239, 68, 68, 0.1); color: var(--accent-rose); border-color: rgba(239, 68, 68, 0.2); }
+        .badge-warm { background-color: rgba(245, 158, 11, 0.1); color: var(--accent-amber); border-color: rgba(245, 158, 11, 0.2); }
+        .badge-cool { background-color: rgba(59, 130, 246, 0.1); color: var(--accent-blue); border-color: rgba(59, 130, 246, 0.2); }
+        .metric-highlight { color: var(--accent-blue); font-weight: 600; }
+        
+        /* Pagination Footer */
+        .pagination { background-color: var(--bg-surface); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); border-top: none; border-radius: 0 0 12px 12px; animation: fadeInUp 0.7s ease;}
+        .page-info { color: var(--text-secondary); font-size: 14px; }
+        .page-controls { display: flex; gap: 8px; }
+        .page-btn { padding: 8px 16px; border: 1px solid var(--border-color); background-color: var(--bg-base); color: var(--text-primary); border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s;}
+        .page-btn:hover:not(:disabled) { background-color: var(--bg-surface); border-color: var(--text-secondary);}
+        .page-btn:disabled { color: var(--border-color); cursor: not-allowed; }
+
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<script>
+    if (sessionStorage.getItem('is_authenticated') !== 'true') window.location.href = 'login.html';
+</script>
+
+<!-- New Sidebar Layout -->
+<div class="sidebar">
+    <div class="sidebar-brand">MeteoSync</div>
+    <a href="analytics.html" class="nav-link">
+        <svg style="width:20px;height:20px;margin-right:10px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+        Analytics Insights
+    </a>
+    <a href="explorer.html" class="nav-link active">
+        <svg style="width:20px;height:20px;margin-right:10px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+        Data Explorer
+    </a>
+    <div class="spacer"></div>
+    <button class="logout-btn" id="logoutBtn">End Session</button>
+</div>
+
+<!-- Main Dashboard Container -->
+<div class="main-content">
+    <div class="header">
+        <h2>Environmental Data Ledger</h2>
+        <p>High-performance enterprise data grid. Search, sort, and export securely.</p>
+    </div>
+
+    <!-- Advanced Toolbar -->
+    <div class="toolbar">
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="Search ID, dates, or values...">
+        </div>
+        
+        <div class="filters">
+            <input type="date" id="startDate" title="Start Date">
+            <input type="date" id="endDate" title="End Date">
+            <select id="sortOrder">
+                <option value="newest">Latest Records First</option>
+                <option value="oldest">Oldest Records First</option>
+                <option value="highTemp">Highest Temperature</option>
+                <option value="lowTemp">Lowest Temperature</option>
+                <option value="highPrecip">Highest Precipitation</option>
+                <option value="highWind">Highest Wind Speed</option>
+            </select>
+        </div>
+
+        <div class="export-group">
+            <button class="btn btn-csv" id="exportCsvBtn">⬇ CSV Export</button>
+            <button class="btn btn-json" id="exportJsonBtn">⬇ JSON Export</button>
+        </div>
+    </div>
+
+    <!-- Enterprise Grid -->
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Log ID</th>
+                    <th>Node City</th>
+                    <th>UTC Timestamp</th>
+                    <th>Temperature</th>
+                    <th>Humidity</th>
+                    <th>Precipitation</th>
+                    <th>Wind Speed</th>
+                    <th>Cloud Cover</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr><td colspan="8" style="text-align:center; padding: 40px; color:#94a3b8;">Initializing Data Engine...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination Footer -->
+    <div class="pagination">
+        <div class="page-info" id="pageInfo">Showing 0 to 0 of 0 entries</div>
+        <div class="page-controls">
+            <button class="page-btn" id="prevBtn" disabled>Previous</button>
+            <button class="page-btn" id="nextBtn" disabled>Next</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('logoutBtn').addEventListener('click', () => { sessionStorage.clear(); window.location.href = 'login.html'; });
+
+    let rawRecords = [];
+    let filteredRecords = [];
+    let currentPage = 1;
+    const rowsPerPage = 50; // Increased for better data density in enterprise view
+
+    function fetchLedgerData() {
+        fetch('http://127.0.0.1:8000/api/explorer/data?city=Islamabad - Core')
+            .then(res => res.json())
+            .then(payload => {
+                rawRecords = payload.records;
+                applyFiltersAndSearch();
+            })
+            .catch(err => {
+                document.getElementById('tableBody').innerHTML = `<tr><td colspan="8" style="color:#ef4444; text-align:center;">Database connection failed. Is Uvicorn running?</td></tr>`;
+            });
+    }
+
+    function applyFiltersAndSearch() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const sortMode = document.getElementById('sortOrder').value;
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+        filteredRecords = rawRecords.filter(row => {
+            const matchesSearch = 
+                row.record_id.toString().includes(searchTerm) ||
+                row.recorded_at.toLowerCase().includes(searchTerm) ||
+                row.temperature.toString().includes(searchTerm);
+            
+            let matchesDate = true;
+            const rowDate = row.recorded_at.split(' ')[0];
+            if (startDate && rowDate < startDate) matchesDate = false;
+            if (endDate && rowDate > endDate) matchesDate = false;
+
+            return matchesSearch && matchesDate;
+        });
+
+        if (sortMode === 'newest') filteredRecords.sort((a, b) => new Date(b.recorded_at) - new Date(a.recorded_at));
+        if (sortMode === 'oldest') filteredRecords.sort((a, b) => new Date(a.recorded_at) - new Date(b.recorded_at));
+        if (sortMode === 'highTemp') filteredRecords.sort((a, b) => b.temperature - a.temperature);
+        if (sortMode === 'lowTemp') filteredRecords.sort((a, b) => a.temperature - b.temperature);
+        if (sortMode === 'highPrecip') filteredRecords.sort((a, b) => b.precipitation - a.precipitation);
+        if (sortMode === 'highWind') filteredRecords.sort((a, b) => b.wind_speed - a.wind_speed);
+
+        currentPage = 1;
+        renderPaginatedTable();
+    }
+
+    // Modern Badge Engine
+    function getTempBadge(temp) {
+        if (temp >= 35) return `<span class="badge badge-hot">${temp}°C</span>`;
+        if (temp >= 25) return `<span class="badge badge-warm">${temp}°C</span>`;
+        return `<span class="badge badge-cool">${temp}°C</span>`;
+    }
+
+    function renderPaginatedTable() {
+        const tableBody = document.getElementById('tableBody');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const pageInfo = document.getElementById('pageInfo');
+
+        tableBody.innerHTML = '';
+
+        if (filteredRecords.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 40px; color:#94a3b8;">No matching records found.</td></tr>`;
+            pageInfo.innerText = "Showing 0 entries";
+            prevBtn.disabled = true;
+            nextBtn.disabled = true;
+            return;
+        }
+
+        const totalPages = Math.ceil(filteredRecords.length / rowsPerPage);
+        const startIndex = (currentPage - 1) * rowsPerPage;
+        const endIndex = startIndex + rowsPerPage;
+        const recordsToDisplay = filteredRecords.slice(startIndex, endIndex);
+
+        recordsToDisplay.forEach(row => {
+            const tempBadge = getTempBadge(row.temperature);
+            const precipFmt = row.precipitation > 0 ? `<span class="metric-highlight">${row.precipitation} mm</span>` : `<span style="color:var(--text-secondary)">0.0 mm</span>`;
+            const windFmt = row.wind_speed > 20 ? `<span class="metric-highlight">${row.wind_speed} km/h</span>` : `${row.wind_speed} km/h`;
+
+            tableBody.innerHTML += `
+                <tr>
+                    <td style="color:var(--text-secondary)">#${row.record_id}</td>
+                    <td>${row.city_name}</td>
+                    <td style="color:var(--text-secondary)">${row.recorded_at}</td>
+                    <td>${tempBadge}</td>
+                    <td>${row.humidity}%</td>
+                    <td>${precipFmt}</td>
+                    <td>${windFmt}</td>
+                    <td>${row.cloud_cover}%</td>
+                </tr>
+            `;
+        });
+
+        pageInfo.innerText = `Showing ${startIndex + 1} to ${Math.min(endIndex, filteredRecords.length)} of ${filteredRecords.length} entries`;
+        prevBtn.disabled = currentPage === 1;
+        nextBtn.disabled = currentPage === totalPages;
+    }
+
+    document.getElementById('prevBtn').addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderPaginatedTable(); } });
+    document.getElementById('nextBtn').addEventListener('click', () => {
+        const totalPages = Math.ceil(filteredRecords.length / rowsPerPage);
+        if (currentPage < totalPages) { currentPage++; renderPaginatedTable(); }
+    });
+
+    document.getElementById('searchInput').addEventListener('input', applyFiltersAndSearch);
+    document.getElementById('sortOrder').addEventListener('change', applyFiltersAndSearch);
+    document.getElementById('startDate').addEventListener('change', applyFiltersAndSearch);
+    document.getElementById('endDate').addEventListener('change', applyFiltersAndSearch);
+
+    document.getElementById('exportCsvBtn').addEventListener('click', () => {
+        if (filteredRecords.length === 0) return alert("No data to export.");
+        let csvContent = "Log_ID,City,Timestamp,Temperature_C,Humidity_Percentage,Precipitation_mm,Wind_Speed_kmh,Cloud_Cover_Percentage\n";
+        filteredRecords.forEach(row => { 
+            csvContent += `${row.record_id},${row.city_name},${row.recorded_at},${row.temperature},${row.humidity},${row.precipitation},${row.wind_speed},${row.cloud_cover}\n`; 
+        });
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a"); link.href = URL.createObjectURL(blob);
+        link.download = "MeteoSync_Export.csv"; link.click();
+    });
+
+    document.getElementById('exportJsonBtn').addEventListener('click', () => {
+        if (filteredRecords.length === 0) return alert("No data to export.");
+        const blob = new Blob([JSON.stringify(filteredRecords, null, 2)], { type: 'application/json' });
+        const link = document.createElement("a"); link.href = URL.createObjectURL(blob);
+        link.download = "MeteoSync_Export.json"; link.click();
+    });
+
+    fetchLedgerData();
+</script>
+</body>
+</html>
