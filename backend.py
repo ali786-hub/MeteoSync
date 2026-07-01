@@ -33,7 +33,8 @@ try:
     db_pool = ThreadedConnectionPool(
         1, 10,  # Maintain between 1 and 10 concurrent connections
         host=os.getenv("DB_HOST"), user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"), database=os.getenv("DB_NAME"), port=os.getenv("DB_PORT")
+        password=os.getenv("DB_PASSWORD"), database=os.getenv("DB_NAME"), port=os.getenv("DB_PORT"),
+        sslmode="require"
     )
     print("Database Connection Pool initialized successfully.")
 except Exception as e:

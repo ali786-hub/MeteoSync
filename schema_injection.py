@@ -96,7 +96,8 @@ def inject_schema():
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
             database=db_name,
-            port=os.getenv("DB_PORT")
+            port=os.getenv("DB_PORT"),
+            sslmode="require"
         )
         
         cursor = conn.cursor()
