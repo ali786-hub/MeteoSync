@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,33 +8,142 @@
     <!-- Import Google's Modern 'Inter' Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #020617 0%, #0f172a 100%); color: #f8fafc; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden;}
-        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
         /* Glassmorphism Panel */
-        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); padding: 40px; border-radius: 16px; width: 100%; max-width: 400px; transition: transform 0.3s ease;}
-        .glass-panel:hover { transform: translateY(-5px); box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6); }
-        
-        .logo-container { text-align: center; margin-bottom: 30px;}
-        .logo-container h1 { font-size: 28px; font-weight: 700; margin: 0; background: linear-gradient(to right, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
-        .logo-container p { color: #94a3b8; font-size: 14px; margin-top: 5px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;}
-        
-        .input-group { margin-bottom: 20px;}
-        .input-group label { display: block; font-size: 12px; font-weight: 600; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;}
-        .input-group input { width: 100%; padding: 14px 16px; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; border-radius: 8px; color: #f8fafc; font-size: 15px; outline: none; transition: all 0.3s ease; box-sizing: border-box;}
-        
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            padding: 40px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            transition: transform 0.3s ease;
+        }
+
+        .glass-panel:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6);
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-container h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(to right, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-container p {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-top: 5px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #f8fafc;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
         /* Glowing Focus State */
-        .input-group input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); background: rgba(15, 23, 42, 0.9);}
-        
-        .submit-btn { width: 100%; padding: 14px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; letter-spacing: 0.5px;}
-        .submit-btn:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);}
-        
-        .error-msg { color: #ef4444; font-size: 13px; margin-top: 15px; text-align: center; min-height: 15px; font-weight: 500;}
-        
-        .links { text-align: center; margin-top: 25px; font-size: 14px;}
-        .links a { color: #3b82f6; text-decoration: none; transition: color 0.3s; font-weight: 500;}
-        .links a:hover { color: #60a5fa;}
+        .input-group input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            background: rgba(15, 23, 42, 0.9);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 0.5px;
+        }
+
+        .submit-btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+        }
+
+        .error-msg {
+            color: #ef4444;
+            font-size: 13px;
+            margin-top: 15px;
+            text-align: center;
+            min-height: 15px;
+            font-weight: 500;
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 14px;
+        }
+
+        .links a {
+            color: #3b82f6;
+            text-decoration: none;
+            transition: color 0.3s;
+            font-weight: 500;
+        }
+
+        .links a:hover {
+            color: #60a5fa;
+        }
     </style>
 </head>
+
 <body>
     <div class="glass-panel">
         <div class="logo-container">
@@ -60,13 +170,14 @@
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
             const errBox = document.getElementById('errorBox');
-            
+
             if (!user || !pass) { errBox.innerText = 'Credentials are required.'; return; }
             errBox.innerText = 'Authenticating...';
             errBox.style.color = '#94a3b8';
-            
+
             try {
-                const res = await fetch('http://127.0.0.1:8000/api/auth/login', {
+                const res = await fetch('https://meteosync.onrender.com/api/auth/login', {
+
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: user, password: pass })
                 });
@@ -75,15 +186,16 @@
                     sessionStorage.setItem('is_authenticated', 'true');
                     sessionStorage.setItem('username', data.username);
                     window.location.href = 'analytics.html';
-                } else { 
+                } else {
                     errBox.style.color = '#ef4444';
-                    errBox.innerText = data.detail || 'Authentication failed.'; 
+                    errBox.innerText = data.detail || 'Authentication failed.';
                 }
-            } catch (e) { 
+            } catch (e) {
                 errBox.style.color = '#ef4444';
-                errBox.innerText = 'Network error: Backend offline.'; 
+                errBox.innerText = 'Network error: Backend offline.';
             }
         });
     </script>
 </body>
+
 </html>

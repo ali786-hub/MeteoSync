@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,9 +11,12 @@
     <style>
         /* Modern Dark Theme Color Palette */
         :root {
-            --bg-base: #020617;      /* Deep Slate Base */
-            --bg-surface: #0f172a;   /* Sidebar / Nav */
-            --bg-card: #1e293b;      /* Glass Panels */
+            --bg-base: #020617;
+            /* Deep Slate Base */
+            --bg-surface: #0f172a;
+            /* Sidebar / Nav */
+            --bg-card: #1e293b;
+            /* Glass Panels */
             --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
             --accent-blue: #3b82f6;
@@ -21,336 +25,582 @@
             --border-color: #334155;
         }
 
-        body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background-color: var(--bg-base); color: var(--text-primary); display: flex; height: 100vh; overflow: hidden; }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
 
         /* Sleek Sidebar Navigation */
-        .sidebar { width: 260px; background-color: var(--bg-surface); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 30px 20px; box-sizing: border-box; }
-        .sidebar-brand { font-size: 22px; font-weight: 700; background: linear-gradient(to right, var(--accent-blue), #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 40px; padding-left: 10px;}
-        .nav-link { display: flex; align-items: center; padding: 14px 16px; color: var(--text-secondary); text-decoration: none; border-radius: 8px; font-weight: 500; margin-bottom: 8px; transition: all 0.3s ease; }
-        .nav-link:hover { background-color: rgba(59, 130, 246, 0.05); color: var(--text-primary); }
-        .nav-link.active { background-color: rgba(59, 130, 246, 0.15); color: var(--accent-blue); font-weight: 600; border-left: 3px solid var(--accent-blue); }
-        .spacer { flex-grow: 1; }
-        .logout-btn { width: 100%; padding: 12px; background: rgba(239, 68, 68, 0.05); color: var(--accent-rose); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
-        .logout-btn:hover { background: var(--accent-rose); color: white; border-color: var(--accent-rose);}
+        .sidebar {
+            width: 260px;
+            background-color: var(--bg-surface);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            box-sizing: border-box;
+        }
+
+        .sidebar-brand {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--accent-blue), #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 40px;
+            padding-left: 10px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(59, 130, 246, 0.05);
+            color: var(--text-primary);
+        }
+
+        .nav-link.active {
+            background-color: rgba(59, 130, 246, 0.15);
+            color: var(--accent-blue);
+            font-weight: 600;
+            border-left: 3px solid var(--accent-blue);
+        }
+
+        .spacer {
+            flex-grow: 1;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 12px;
+            background: rgba(239, 68, 68, 0.05);
+            color: var(--accent-rose);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: var(--accent-rose);
+            color: white;
+            border-color: var(--accent-rose);
+        }
 
         /* Main Content Area */
-        .main-content { flex-grow: 1; overflow-y: auto; padding: 40px 60px; box-sizing: border-box; }
-        .header { margin-bottom: 40px; animation: fadeInDown 0.5s ease; }
-        .header h2 { margin: 0 0 8px 0; font-size: 28px; font-weight: 700; }
-        .header p { margin: 0; color: var(--text-secondary); font-size: 15px;}
-        .node-badge { display: inline-block; padding: 4px 12px; background-color: rgba(16, 185, 129, 0.1); color: var(--accent-emerald); border-radius: 20px; font-size: 13px; font-weight: 600; margin-top: 10px; border: 1px solid rgba(16, 185, 129, 0.2);}
+        .main-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 40px 60px;
+            box-sizing: border-box;
+        }
+
+        .header {
+            margin-bottom: 40px;
+            animation: fadeInDown 0.5s ease;
+        }
+
+        .header h2 {
+            margin: 0 0 8px 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .header p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        .node-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--accent-emerald);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 10px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
 
         /* Interactive KPI Grid */
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 40px; animation: fadeInUp 0.5s ease; }
-        .kpi-card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; transition: transform 0.3s, box-shadow 0.3s; position: relative; overflow: hidden; }
-        .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); border-color: rgba(255, 255, 255, 0.1); }
-        .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; }
-        .kpi-card:nth-child(1)::before { background-color: var(--accent-rose); }
-        .kpi-card:nth-child(2)::before { background-color: var(--accent-blue); }
-        .kpi-card:nth-child(3)::before { background-color: var(--accent-emerald); }
-        
-        .kpi-title { color: var(--text-secondary); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 12px; }
-        .kpi-value { font-size: 36px; font-weight: 700; color: var(--text-primary); }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .kpi-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+        }
+
+        .kpi-card:nth-child(1)::before {
+            background-color: var(--accent-rose);
+        }
+
+        .kpi-card:nth-child(2)::before {
+            background-color: var(--accent-blue);
+        }
+
+        .kpi-card:nth-child(3)::before {
+            background-color: var(--accent-emerald);
+        }
+
+        .kpi-title {
+            color: var(--text-secondary);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .kpi-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
 
         /* Chart Dashboard Panel */
-        .chart-section { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 30px; animation: fadeInUp 0.7s ease; }
-        .chart-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; flex-wrap: wrap; gap: 20px; }
-        .chart-title h3 { margin: 0 0 5px 0; font-size: 20px; font-weight: 600;}
-        .chart-title p { margin: 0; color: var(--text-secondary); font-size: 14px; }
-        
-        /* Modern Select Dropdowns */
-        .controls { display: flex; gap: 16px; flex-wrap: wrap; }
-        .control-group { display: flex; flex-direction: column; gap: 6px; }
-        .control-group label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.5px; }
-        .controls select { appearance: none; background-color: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-primary); padding: 10px 36px 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; outline: none; transition: all 0.3s; 
-                           background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 12px top 50%; background-size: 10px auto; }
-        .controls select:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
-        .controls select option { background-color: var(--bg-surface); color: var(--text-primary); }
+        .chart-section {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 30px;
+            animation: fadeInUp 0.7s ease;
+        }
 
-        .chart-wrapper { width: 100%; height: 400px; position: relative; }
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .chart-title h3 {
+            margin: 0 0 5px 0;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .chart-title p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Modern Select Dropdowns */
+        .controls {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .control-group label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
+        }
+
+        .controls select {
+            appearance: none;
+            background-color: var(--bg-base);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px 36px 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px top 50%;
+            background-size: 10px auto;
+        }
+
+        .controls select:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        .controls select option {
+            background-color: var(--bg-surface);
+            color: var(--text-primary);
+        }
+
+        .chart-wrapper {
+            width: 100%;
+            height: 400px;
+            position: relative;
+        }
 
         /* Animations */
-        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
+
 <body>
 
-<script>
-    if (sessionStorage.getItem('is_authenticated') !== 'true') window.location.href = 'login.html';
-</script>
+    <script>
+        if (sessionStorage.getItem('is_authenticated') !== 'true') window.location.href = 'login.html';
+    </script>
 
-<!-- New Sidebar Layout -->
-<div class="sidebar">
-    <div class="sidebar-brand">MeteoSync</div>
-    <a href="analytics.html" class="nav-link active">
-        <svg style="width:20px;height:20px;margin-right:10px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-        Analytics Insights
-    </a>
-    <a href="explorer.html" class="nav-link">
-        <svg style="width:20px;height:20px;margin-right:10px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
-        Data Explorer
-    </a>
-    <div class="spacer"></div>
-    <button class="logout-btn" id="logoutBtn">End Session</button>
-</div>
-
-<!-- Main Dashboard Container -->
-<div class="main-content">
-    <div class="header">
-        <h2 id="welcomeText">Dashboard Overview</h2>
-        <p>Real-time analytics processing for the selected telemetry stream.</p>
-        <div class="node-badge">Tracking Node: Islamabad, PK</div>
+    <!-- New Sidebar Layout -->
+    <div class="sidebar">
+        <div class="sidebar-brand">MeteoSync</div>
+        <a href="analytics.html" class="nav-link active">
+            <svg style="width:20px;height:20px;margin-right:10px;" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                </path>
+            </svg>
+            Analytics Insights
+        </a>
+        <a href="explorer.html" class="nav-link">
+            <svg style="width:20px;height:20px;margin-right:10px;" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+            </svg>
+            Data Explorer
+        </a>
+        <div class="spacer"></div>
+        <button class="logout-btn" id="logoutBtn">End Session</button>
     </div>
 
-    <!-- Dynamic KPI Cards -->
-    <div class="kpi-grid">
-        <div class="kpi-card">
-            <div class="kpi-title" id="kpi1-title">--</div>
-            <div class="kpi-value" id="kpi1-val">--</div>
+    <!-- Main Dashboard Container -->
+    <div class="main-content">
+        <div class="header">
+            <h2 id="welcomeText">Dashboard Overview</h2>
+            <p>Real-time analytics processing for the selected telemetry stream.</p>
+            <div class="node-badge">Tracking Node: Islamabad, PK</div>
         </div>
-        <div class="kpi-card">
-            <div class="kpi-title" id="kpi2-title">--</div>
-            <div class="kpi-value" id="kpi2-val">--</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-title" id="kpi3-title">--</div>
-            <div class="kpi-value" id="kpi3-val">--</div>
-        </div>
-    </div>
 
-    <!-- Interactive Visualization Engine -->
-    <div class="chart-section">
-        <div class="chart-header">
-            <div class="chart-title">
-                <h3>Historical Climate Matrix</h3>
-                <p>Interactive rendering of database metrics.</p>
+        <!-- Dynamic KPI Cards -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title" id="kpi1-title">--</div>
+                <div class="kpi-value" id="kpi1-val">--</div>
             </div>
-            <div class="controls">
-                <div class="control-group">
-                    <label>Telemetry Metric</label>
-                    <select id="metricSelector">
-                        <option value="temperature">Temperature (°C)</option>
-                        <option value="precipitation">Precipitation (mm)</option>
-                        <option value="wind_speed">Wind Speed (km/h)</option>
-                        <option value="cloud_cover">Cloud Cover (%)</option>
-                        <option value="humidity">Relative Humidity (%)</option>
-                    </select>
-                </div>
-                <div class="control-group">
-                    <label>Time Horizon</label>
-                    <select id="rangeSelector">
-                        <option value="24">Last 24 Hours</option>
-                        <option value="168" selected>Last 7 Days</option>
-                        <option value="336">Last 14 Days</option>
-                        <option value="720">Last 30 Days</option>
-                        <option value="all">All Available Data</option>
-                    </select>
-                </div>
-                <div class="control-group">
-                    <label>Aggregation</label>
-                    <select id="granularitySelector">
-                        <option value="hourly">Hourly (Precision)</option>
-                        <option value="daily">Daily (Averaged)</option>
-                    </select>
-                </div>
+            <div class="kpi-card">
+                <div class="kpi-title" id="kpi2-title">--</div>
+                <div class="kpi-value" id="kpi2-val">--</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title" id="kpi3-title">--</div>
+                <div class="kpi-value" id="kpi3-val">--</div>
             </div>
         </div>
-        
-        <div class="chart-wrapper">
-            <canvas id="meteoChart"></canvas>
+
+        <!-- Interactive Visualization Engine -->
+        <div class="chart-section">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <h3>Historical Climate Matrix</h3>
+                    <p>Interactive rendering of database metrics.</p>
+                </div>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Telemetry Metric</label>
+                        <select id="metricSelector">
+                            <option value="temperature">Temperature (°C)</option>
+                            <option value="precipitation">Precipitation (mm)</option>
+                            <option value="wind_speed">Wind Speed (km/h)</option>
+                            <option value="cloud_cover">Cloud Cover (%)</option>
+                            <option value="humidity">Relative Humidity (%)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Time Horizon</label>
+                        <select id="rangeSelector">
+                            <option value="24">Last 24 Hours</option>
+                            <option value="168" selected>Last 7 Days</option>
+                            <option value="336">Last 14 Days</option>
+                            <option value="720">Last 30 Days</option>
+                            <option value="all">All Available Data</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Aggregation</label>
+                        <select id="granularitySelector">
+                            <option value="hourly">Hourly (Precision)</option>
+                            <option value="daily">Daily (Averaged)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-wrapper">
+                <canvas id="meteoChart"></canvas>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    document.getElementById('welcomeText').innerText = `Welcome back, ${sessionStorage.getItem('username')}`;
-    document.getElementById('logoutBtn').addEventListener('click', () => { sessionStorage.clear(); window.location.href = 'login.html'; });
+    <script>
+        document.getElementById('welcomeText').innerText = `Welcome back, ${sessionStorage.getItem('username')}`;
+        document.getElementById('logoutBtn').addEventListener('click', () => { sessionStorage.clear(); window.location.href = 'login.html'; });
 
-    let globalData = [];
-    let chartInstance = null;
+        let globalData = [];
+        let chartInstance = null;
 
-    Chart.defaults.color = '#94a3b8';
-    Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = "'Inter', sans-serif";
 
-    function processData() {
-        const metric = document.getElementById('metricSelector').value;
-        const range = document.getElementById('rangeSelector').value;
-        const granularity = document.getElementById('granularitySelector').value;
+        function processData() {
+            const metric = document.getElementById('metricSelector').value;
+            const range = document.getElementById('rangeSelector').value;
+            const granularity = document.getElementById('granularitySelector').value;
 
-        let filteredData = globalData;
-        if (range !== 'all') {
-            const hoursToKeep = parseInt(range);
-            filteredData = globalData.slice(-hoursToKeep);
-        }
-
-        let processedLabels = [];
-        let processedValues = [];
-
-        if (granularity === 'daily') {
-            const dailyMap = {};
-            filteredData.forEach(item => {
-                const dateOnly = item.timestamp.split(' ')[0];
-                if (!dailyMap[dateOnly]) dailyMap[dateOnly] = { sum: 0, count: 0 };
-                
-                let val = 0;
-                if (metric === 'temperature') val = item.temperature;
-                else if (metric === 'humidity') val = item.humidity;
-                else if (metric === 'precipitation') val = item.precipitation;
-                else if (metric === 'cloud_cover') val = item.cloud_cover;
-                else if (metric === 'wind_speed') val = item.wind_speed;
-
-                dailyMap[dateOnly].sum += val;
-                dailyMap[dateOnly].count += 1;
-            });
-            
-            processedLabels = Object.keys(dailyMap);
-            processedValues = processedLabels.map(date => {
-                if (metric === 'precipitation') return parseFloat(dailyMap[date].sum.toFixed(2));
-                return parseFloat((dailyMap[date].sum / dailyMap[date].count).toFixed(2));
-            });
-        } else {
-            processedLabels = filteredData.map(item => item.timestamp);
-            processedValues = filteredData.map(item => {
-                if (metric === 'temperature') return item.temperature;
-                if (metric === 'humidity') return item.humidity;
-                if (metric === 'precipitation') return item.precipitation;
-                if (metric === 'cloud_cover') return item.cloud_cover;
-                if (metric === 'wind_speed') return item.wind_speed;
-            });
-        }
-
-        updateDashboardUI(processedValues, processedLabels, metric);
-    }
-
-    function updateDashboardUI(values, labels, metric) {
-        if (values.length > 0) {
-            let maxVal = Math.max(...values);
-            let minVal = Math.min(...values);
-            let avgVal = (values.reduce((a, b) => a + b, 0) / values.length).toFixed(2);
-            let totalVal = values.reduce((a, b) => a + b, 0).toFixed(2);
-            
-            if (metric === 'temperature') {
-                document.getElementById('kpi1-title').innerText = "Peak Temperature";
-                document.getElementById('kpi1-val').innerText = `${maxVal}°C`;
-                document.getElementById('kpi2-title').innerText = "Lowest Drop";
-                document.getElementById('kpi2-val').innerText = `${minVal}°C`;
-                document.getElementById('kpi3-title').innerText = "Average Temp";
-                document.getElementById('kpi3-val').innerText = `${avgVal}°C`;
-            } else if (metric === 'precipitation') {
-                document.getElementById('kpi1-title').innerText = "Max Rainfall (Hourly)";
-                document.getElementById('kpi1-val').innerText = `${maxVal} mm`;
-                document.getElementById('kpi2-title').innerText = "Total Volume";
-                document.getElementById('kpi2-val').innerText = `${totalVal} mm`;
-                document.getElementById('kpi3-title').innerText = "Avg Precipitation";
-                document.getElementById('kpi3-val').innerText = `${avgVal} mm`;
-            } else if (metric === 'wind_speed') {
-                document.getElementById('kpi1-title').innerText = "Max Wind Gust";
-                document.getElementById('kpi1-val').innerText = `${maxVal} km/h`;
-                document.getElementById('kpi2-title').innerText = "Min Wind Speed";
-                document.getElementById('kpi2-val').innerText = `${minVal} km/h`;
-                document.getElementById('kpi3-title').innerText = "Average Wind";
-                document.getElementById('kpi3-val').innerText = `${avgVal} km/h`;
-            } else if (metric === 'cloud_cover') {
-                document.getElementById('kpi1-title').innerText = "Peak Coverage";
-                document.getElementById('kpi1-val').innerText = `${maxVal}%`;
-                document.getElementById('kpi2-title').innerText = "Lowest Coverage";
-                document.getElementById('kpi2-val').innerText = `${minVal}%`;
-                document.getElementById('kpi3-title').innerText = "Average Clouds";
-                document.getElementById('kpi3-val').innerText = `${avgVal}%`;
-            } else {
-                document.getElementById('kpi1-title').innerText = "Max Humidity";
-                document.getElementById('kpi1-val').innerText = `${maxVal}%`;
-                document.getElementById('kpi2-title').innerText = "Min Humidity";
-                document.getElementById('kpi2-val').innerText = `${minVal}%`;
-                document.getElementById('kpi3-title').innerText = "Average Humidity";
-                document.getElementById('kpi3-val').innerText = `${avgVal}%`;
+            let filteredData = globalData;
+            if (range !== 'all') {
+                const hoursToKeep = parseInt(range);
+                filteredData = globalData.slice(-hoursToKeep);
             }
+
+            let processedLabels = [];
+            let processedValues = [];
+
+            if (granularity === 'daily') {
+                const dailyMap = {};
+                filteredData.forEach(item => {
+                    const dateOnly = item.timestamp.split(' ')[0];
+                    if (!dailyMap[dateOnly]) dailyMap[dateOnly] = { sum: 0, count: 0 };
+
+                    let val = 0;
+                    if (metric === 'temperature') val = item.temperature;
+                    else if (metric === 'humidity') val = item.humidity;
+                    else if (metric === 'precipitation') val = item.precipitation;
+                    else if (metric === 'cloud_cover') val = item.cloud_cover;
+                    else if (metric === 'wind_speed') val = item.wind_speed;
+
+                    dailyMap[dateOnly].sum += val;
+                    dailyMap[dateOnly].count += 1;
+                });
+
+                processedLabels = Object.keys(dailyMap);
+                processedValues = processedLabels.map(date => {
+                    if (metric === 'precipitation') return parseFloat(dailyMap[date].sum.toFixed(2));
+                    return parseFloat((dailyMap[date].sum / dailyMap[date].count).toFixed(2));
+                });
+            } else {
+                processedLabels = filteredData.map(item => item.timestamp);
+                processedValues = filteredData.map(item => {
+                    if (metric === 'temperature') return item.temperature;
+                    if (metric === 'humidity') return item.humidity;
+                    if (metric === 'precipitation') return item.precipitation;
+                    if (metric === 'cloud_cover') return item.cloud_cover;
+                    if (metric === 'wind_speed') return item.wind_speed;
+                });
+            }
+
+            updateDashboardUI(processedValues, processedLabels, metric);
         }
 
-        if (chartInstance) chartInstance.destroy();
+        function updateDashboardUI(values, labels, metric) {
+            if (values.length > 0) {
+                let maxVal = Math.max(...values);
+                let minVal = Math.min(...values);
+                let avgVal = (values.reduce((a, b) => a + b, 0) / values.length).toFixed(2);
+                let totalVal = values.reduce((a, b) => a + b, 0).toFixed(2);
 
-        const ctx = document.getElementById('meteoChart').getContext('2d');
-        
-        let lineColor, rgbaColor, yAxisLabel, unit;
-        if (metric === 'temperature') { lineColor = '#ef4444'; rgbaColor = '239, 68, 68'; yAxisLabel = 'Temperature (°C)'; unit = '°C'; }
-        else if (metric === 'precipitation') { lineColor = '#3b82f6'; rgbaColor = '59, 130, 246'; yAxisLabel = 'Precipitation (mm)'; unit = 'mm'; }
-        else if (metric === 'wind_speed') { lineColor = '#8b5cf6'; rgbaColor = '139, 92, 246'; yAxisLabel = 'Wind Speed (km/h)'; unit = 'km/h'; }
-        else if (metric === 'cloud_cover') { lineColor = '#eab308'; rgbaColor = '234, 179, 8'; yAxisLabel = 'Cloud Cover (%)'; unit = '%'; }
-        else { lineColor = '#10b981'; rgbaColor = '16, 185, 129'; yAxisLabel = 'Relative Humidity (%)'; unit = '%'; }
-
-        // Advanced Canvas Gradients!
-        let gradient = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, `rgba(${rgbaColor}, 0.5)`);
-        gradient.addColorStop(1, `rgba(${rgbaColor}, 0.0)`);
-
-        chartInstance = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: yAxisLabel,
-                    data: values,
-                    borderColor: lineColor,
-                    backgroundColor: gradient, // Stunning Gradient Fill
-                    borderWidth: 3,
-                    pointRadius: 0,            // Hide dots for cleaner look
-                    pointHoverRadius: 6,
-                    pointBackgroundColor: lineColor,
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    fill: true,
-                    tension: 0.4               // Smooth bezier curves
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                        titleColor: '#f8fafc',
-                        bodyColor: '#f8fafc',
-                        borderColor: '#334155',
-                        borderWidth: 1,
-                        padding: 12,
-                        displayColors: false,
-                        callbacks: { label: function(context) { return ` ${context.parsed.y} ${unit}`; } }
-                    }
-                },
-                scales: {
-                    x: { grid: { display: false, drawBorder: false }, ticks: { maxTicksLimit: 10 } },
-                    y: { 
-                        grid: { color: '#334155', drawBorder: false }, 
-                        title: { display: true, text: yAxisLabel, font: { weight: '600' } }, 
-                        beginAtZero: metric !== 'temperature' 
-                    }
+                if (metric === 'temperature') {
+                    document.getElementById('kpi1-title').innerText = "Peak Temperature";
+                    document.getElementById('kpi1-val').innerText = `${maxVal}°C`;
+                    document.getElementById('kpi2-title').innerText = "Lowest Drop";
+                    document.getElementById('kpi2-val').innerText = `${minVal}°C`;
+                    document.getElementById('kpi3-title').innerText = "Average Temp";
+                    document.getElementById('kpi3-val').innerText = `${avgVal}°C`;
+                } else if (metric === 'precipitation') {
+                    document.getElementById('kpi1-title').innerText = "Max Rainfall (Hourly)";
+                    document.getElementById('kpi1-val').innerText = `${maxVal} mm`;
+                    document.getElementById('kpi2-title').innerText = "Total Volume";
+                    document.getElementById('kpi2-val').innerText = `${totalVal} mm`;
+                    document.getElementById('kpi3-title').innerText = "Avg Precipitation";
+                    document.getElementById('kpi3-val').innerText = `${avgVal} mm`;
+                } else if (metric === 'wind_speed') {
+                    document.getElementById('kpi1-title').innerText = "Max Wind Gust";
+                    document.getElementById('kpi1-val').innerText = `${maxVal} km/h`;
+                    document.getElementById('kpi2-title').innerText = "Min Wind Speed";
+                    document.getElementById('kpi2-val').innerText = `${minVal} km/h`;
+                    document.getElementById('kpi3-title').innerText = "Average Wind";
+                    document.getElementById('kpi3-val').innerText = `${avgVal} km/h`;
+                } else if (metric === 'cloud_cover') {
+                    document.getElementById('kpi1-title').innerText = "Peak Coverage";
+                    document.getElementById('kpi1-val').innerText = `${maxVal}%`;
+                    document.getElementById('kpi2-title').innerText = "Lowest Coverage";
+                    document.getElementById('kpi2-val').innerText = `${minVal}%`;
+                    document.getElementById('kpi3-title').innerText = "Average Clouds";
+                    document.getElementById('kpi3-val').innerText = `${avgVal}%`;
+                } else {
+                    document.getElementById('kpi1-title').innerText = "Max Humidity";
+                    document.getElementById('kpi1-val').innerText = `${maxVal}%`;
+                    document.getElementById('kpi2-title').innerText = "Min Humidity";
+                    document.getElementById('kpi2-val').innerText = `${minVal}%`;
+                    document.getElementById('kpi3-title').innerText = "Average Humidity";
+                    document.getElementById('kpi3-val').innerText = `${avgVal}%`;
                 }
             }
-        });
-    }
 
-    // Backend fetching
-    fetch('http://127.0.0.1:8000/api/analytics/dashboard?city=Islamabad - Core')
-        .then(res => res.json())
-        .then(payload => {
-            globalData = payload.timeline;
-            processData();
-        })
-        .catch(err => {
-            console.error('Data pipeline error:', err);
-            alert("Failed to connect to backend server.");
-        });
+            if (chartInstance) chartInstance.destroy();
 
-    document.getElementById('metricSelector').addEventListener('change', processData);
-    document.getElementById('rangeSelector').addEventListener('change', processData);
-    document.getElementById('granularitySelector').addEventListener('change', processData);
+            const ctx = document.getElementById('meteoChart').getContext('2d');
 
-</script>
+            let lineColor, rgbaColor, yAxisLabel, unit;
+            if (metric === 'temperature') { lineColor = '#ef4444'; rgbaColor = '239, 68, 68'; yAxisLabel = 'Temperature (°C)'; unit = '°C'; }
+            else if (metric === 'precipitation') { lineColor = '#3b82f6'; rgbaColor = '59, 130, 246'; yAxisLabel = 'Precipitation (mm)'; unit = 'mm'; }
+            else if (metric === 'wind_speed') { lineColor = '#8b5cf6'; rgbaColor = '139, 92, 246'; yAxisLabel = 'Wind Speed (km/h)'; unit = 'km/h'; }
+            else if (metric === 'cloud_cover') { lineColor = '#eab308'; rgbaColor = '234, 179, 8'; yAxisLabel = 'Cloud Cover (%)'; unit = '%'; }
+            else { lineColor = '#10b981'; rgbaColor = '16, 185, 129'; yAxisLabel = 'Relative Humidity (%)'; unit = '%'; }
+
+            // Advanced Canvas Gradients!
+            let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, `rgba(${rgbaColor}, 0.5)`);
+            gradient.addColorStop(1, `rgba(${rgbaColor}, 0.0)`);
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: yAxisLabel,
+                        data: values,
+                        borderColor: lineColor,
+                        backgroundColor: gradient, // Stunning Gradient Fill
+                        borderWidth: 3,
+                        pointRadius: 0,            // Hide dots for cleaner look
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: lineColor,
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        fill: true,
+                        tension: 0.4               // Smooth bezier curves
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#f8fafc',
+                            borderColor: '#334155',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: false,
+                            callbacks: { label: function (context) { return ` ${context.parsed.y} ${unit}`; } }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false, drawBorder: false }, ticks: { maxTicksLimit: 10 } },
+                        y: {
+                            grid: { color: '#334155', drawBorder: false },
+                            title: { display: true, text: yAxisLabel, font: { weight: '600' } },
+                            beginAtZero: metric !== 'temperature'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Backend fetching
+        fetch('https://meteosync.onrender.com/api/analytics/dashboard?city=Islamabad - Core')
+
+            .then(res => res.json())
+            .then(payload => {
+                globalData = payload.timeline;
+                processData();
+            })
+            .catch(err => {
+                console.error('Data pipeline error:', err);
+                alert("Failed to connect to backend server.");
+            });
+
+        document.getElementById('metricSelector').addEventListener('change', processData);
+        document.getElementById('rangeSelector').addEventListener('change', processData);
+        document.getElementById('granularitySelector').addEventListener('change', processData);
+
+    </script>
 </body>
+
 </html>
