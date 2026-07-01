@@ -1,0 +1,7 @@
+.env
+.gitignore
+__pycache__
+README.md
+*.html
+schema_injection.py 
+meteo_to_dbms.py
