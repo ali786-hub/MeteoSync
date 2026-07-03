@@ -41,7 +41,7 @@ def run_enterprise_pipeline():
                 "latitude": lat,
                 "longitude": lon,
                 "hourly": "temperature_2m,relative_humidity_2m,precipitation,cloud_cover,wind_speed_10m",
-                "past_days": 14,  
+                "past_days": 1,  
                 "forecast_days": 0,
                 "timezone": "UTC"
             }

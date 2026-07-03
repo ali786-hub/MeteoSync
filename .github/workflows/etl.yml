@@ -1,0 +1,39 @@
+name: Daily Climate Telemetry ETL
+
+# Runs automatically at midnight UTC every day, and allows manual triggers
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  run-etl:
+    runs-on: ubuntu-latest
+
+    # Inject your database credentials securely from GitHub Secrets
+    env:
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+
+    steps:
+      # 1. Pull the code from your repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # 2. Set up Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      # 3. Install the exact libraries needed for the ETL script
+      - name: Install Dependencies
+        run: |
+          pip install requests psycopg2-binary python-dotenv
+
+      # 4. Execute the pipeline
+      - name: Run ETL Pipeline
+        run: python meteo_to_dbms.py
