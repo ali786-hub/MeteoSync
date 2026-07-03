@@ -82,7 +82,7 @@ SELECT
         WHEN EXTRACT(MONTH FROM datum) IN (6, 7, 8) THEN 'Summer'
         ELSE 'Autumn'
     END AS season
-FROM (SELECT generate_series('2024-01-01'::DATE, '2030-12-31'::DATE, '1 day'::INTERVAL) AS datum) d
+FROM (SELECT generate_series('1995-01-01'::DATE, '2030-12-31'::DATE, '1 day'::INTERVAL) AS datum) d
 ON CONFLICT (date_key) DO NOTHING;
 """
 
