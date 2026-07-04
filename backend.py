@@ -1,3 +1,11 @@
+"""
+MeteoSync Enterprise Gateway API.
+
+This FastAPI application serves as the production-ready backend architecture 
+for the MeteoSync data warehouse. It handles user authentication, serves 
+optimized analytics and raw exploration data, and provides secure gateway access.
+"""
+
 import os
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -57,13 +65,30 @@ def get_db_connection():
 # 2. PASSWORD HASHING UTILITIES
 # ==========================================
 def hash_password(password: str) -> str:
-    """Hashes a password using PBKDF2 (Cryptographically secure)."""
+    """
+    Hashes a password using PBKDF2 with SHA-256 (Cryptographically secure).
+    
+    Args:
+        password: The plain-text password to hash.
+        
+    Returns:
+        The hex string representation of the hashed password.
+    """
     salt = b"meteosync_enterprise_secure_salt_string"
     key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
     return key.hex()
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verifies a plain-text password against the stored hash."""
+    """
+    Verifies a plain-text password against the stored hash.
+    
+    Args:
+        plain_password: The unhashed password attempt.
+        hashed_password: The stored secure hash from the database.
+        
+    Returns:
+        True if the password matches, False otherwise.
+    """
     return hash_password(plain_password) == hashed_password
 
 
@@ -85,8 +110,16 @@ class LocationCreate(BaseModel):
 # ==========================================
 
 @app.post("/api/auth/signup")
-def user_signup(user: UserAuth):
-    """Registers a new system user inside the isolated 'auth' schema."""
+def user_signup(user: UserAuth) -> dict:
+    """
+    Registers a new system user inside the isolated 'auth' schema.
+    
+    Args:
+        user: The UserAuth payload containing username and password.
+        
+    Returns:
+        A success message upon successful registration.
+    """
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -110,8 +143,16 @@ def user_signup(user: UserAuth):
         raise HTTPException(status_code=500, detail=f"Database failure during signup: {str(e)}")
 
 @app.post("/api/auth/login")
-def user_login(user: UserAuth):
-    """Validates user credentials and grants entry into the platform."""
+def user_login(user: UserAuth) -> dict:
+    """
+    Validates user credentials and grants entry into the platform.
+    
+    Args:
+        user: The UserAuth payload containing username and password.
+        
+    Returns:
+        A dictionary containing the authenticated user's ID, username, and role.
+    """
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -148,8 +189,23 @@ def get_dashboard_analytics(
     start_date: str = Query(None, description="Format: YYYY-MM-DD"),
     end_date: str = Query(None, description="Format: YYYY-MM-DD"),
     year: str = Query(None, description="Specific year (e.g. 2015)")
-):
-    """Calculates summary KPIs and returns time-series chart data arrays optimized for performance and custom ranges."""
+) -> dict:
+    """
+    Calculates summary KPIs and returns time-series chart data arrays.
+    
+    Optimized for performance, this endpoint dynamically adjusts aggregation 
+    granularity based on the time horizon to prevent memory exhaustion on large datasets.
+    
+    Args:
+        city: The name of the monitored location.
+        range: Relative hour range or 'all'.
+        start_date: Custom start date filter.
+        end_date: Custom end date filter.
+        year: Custom year filter.
+        
+    Returns:
+        A dictionary containing location summary KPIs and the timeline series array.
+    """
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -374,8 +430,22 @@ def explore_raw_data(
     page: int = Query(1, ge=1, description="Page number for pagination"),
     limit: int = Query(50, ge=1, le=100, description="Number of records per page"),
     year: str = Query(None, description="Specific year to filter (e.g. 1996)")
-):
-    """Provides index-optimized server-side pagination and dynamic filtering for the raw table records view."""
+) -> dict:
+    """
+    Provides index-optimized server-side pagination and dynamic filtering 
+    for the raw table records view.
+    
+    Args:
+        city: The name of the monitored location.
+        start_date: Custom start date filter.
+        end_date: Custom end date filter.
+        page: The pagination offset multiplier.
+        limit: The maximum number of records to return per page.
+        year: Custom year filter.
+        
+    Returns:
+        A paginated dictionary of raw telemetry records.
+    """
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -458,8 +528,16 @@ def explore_raw_data(
 # ==========================================
 
 @app.post("/api/admin/locations")
-def add_new_monitored_location(loc: LocationCreate):
-    """Enables admin accounts to inject new geographic node fields directly."""
+def add_new_monitored_location(loc: LocationCreate) -> dict:
+    """
+    Enables admin accounts to inject new geographic node fields directly.
+    
+    Args:
+        loc: The LocationCreate payload containing city_name, latitude, and longitude.
+        
+    Returns:
+        A dictionary confirming the deployment of the new tracking node.
+    """
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()

@@ -1,3 +1,11 @@
+"""
+MeteoSync Enterprise ETL Pipeline.
+
+This script fetches real-time and recent historical weather data from the 
+Open-Meteo forecast API and synchronizes it into the Azure PostgreSQL 
+data warehouse using highly optimized batch upserts.
+"""
+
 import os
 import requests
 import psycopg2
@@ -7,7 +15,16 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-def run_enterprise_pipeline():
+OPEN_METEO_API_URL: str = "https://api.open-meteo.com/v1/forecast"
+
+def run_enterprise_pipeline() -> None:
+    """
+    Executes the daily ETL synchronization pipeline.
+    
+    The function connects to the target data warehouse, dynamically discovers
+    active microclimate tracking nodes, and fetches their latest telemetry.
+    The data is then transformed and securely upserted via bulk idempotent writes.
+    """
     print("Initiating MeteoSync ETL Pipeline...")
     
     conn = None
@@ -29,9 +46,6 @@ def run_enterprise_pipeline():
         tracking_nodes = cursor.fetchall()
         print(f"Discovered {len(tracking_nodes)} active microclimate nodes in database.")
         
-        # Base API configuration for Open-Meteo
-        api_url = "https://api.open-meteo.com/v1/forecast"
-        
         # 3. Loop through every microclimate and extract data
         for node in tracking_nodes:
             loc_id, city, lat, lon = node
@@ -46,7 +60,7 @@ def run_enterprise_pipeline():
                 "timezone": "UTC"
             }
             
-            response = requests.get(api_url, params=payload)
+            response = requests.get(OPEN_METEO_API_URL, params=payload)
             if response.status_code != 200:
                 print(f"API fault for {city}. Skipping.")
                 continue

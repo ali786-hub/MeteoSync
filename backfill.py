@@ -1,3 +1,12 @@
+"""
+MeteoSync Historical Backfill Pipeline.
+
+This script fetches historical weather data from the Open-Meteo Archive API 
+and populates the MeteoSync data warehouse. It utilizes batch chunking 
+to handle millions of rows without memory overflow and applies idempotent 
+inserts to safely resume failed runs.
+"""
+
 import os
 import requests
 import psycopg2
@@ -7,7 +16,16 @@ from dotenv import load_dotenv
 # Load database configuration
 load_dotenv()
 
-def run_historical_backfill():
+OPEN_METEO_ARCHIVE_URL: str = "https://archive-api.open-meteo.com/v1/archive"
+
+def run_historical_backfill() -> None:
+    """
+    Executes the backfill ETL pipeline from 1996 to 2026.
+    
+    The function queries the local database for active nodes, chunks the time horizon
+    into 5-year segments to avoid rate limits, fetches hourly historical data,
+    transforms it into relational records, and upserts it into the fact table.
+    """
     print("====================================================")
     print("MeteoSync Data Warehouse: 1-Million Row Backfill Pipeline")
     print("====================================================")
@@ -31,9 +49,7 @@ def run_historical_backfill():
         tracking_nodes = cursor.fetchall()
         print(f"Found {len(tracking_nodes)} active tracking nodes for historical backfill.")
         
-        # 2. Archive API endpoint
-        api_url = "https://archive-api.open-meteo.com/v1/archive"
-        
+        # 2. Archive API endpoint usage
         # We will fetch data from 1996-01-01 to 2026-06-30 (~30.5 years).
         # This will generate: 30.5 years * 365 days * 24 hours * 4 locations = ~1,068,000 rows!
         # To avoid API timeout limits, we chunk the requests into 5-year intervals.
@@ -63,7 +79,7 @@ def run_historical_backfill():
                     "timezone": "UTC"
                 }
                 
-                response = requests.get(api_url, params=payload)
+                response = requests.get(OPEN_METEO_ARCHIVE_URL, params=payload)
                 if response.status_code != 200:
                     print(f"     [Error] API fetch failed for {city}: {response.text}")
                     continue

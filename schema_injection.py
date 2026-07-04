@@ -1,3 +1,12 @@
+"""
+MeteoSync Database Schema Injector Module.
+
+This module is responsible for defining and injecting the core relational 
+database schema (DDL) for the MeteoSync data warehouse in Azure PostgreSQL.
+It automatically provisions isolated schemas ('auth' and 'telemetry'), creates 
+dimension and fact tables, and seeds the calendar dimension dynamically.
+"""
+
 import os
 import psycopg2
 from psycopg2 import Error
@@ -6,7 +15,7 @@ from dotenv import load_dotenv
 # Load database environment variables from .env
 load_dotenv()
 
-schema_sql = """
+SCHEMA_SQL: str = """
 -- Create security-isolated schemas
 CREATE SCHEMA IF NOT EXISTS auth;
 CREATE SCHEMA IF NOT EXISTS telemetry;
@@ -86,7 +95,17 @@ FROM (SELECT generate_series('1995-01-01'::DATE, '2030-12-31'::DATE, '1 day'::IN
 ON CONFLICT (date_key) DO NOTHING;
 """
 
-def inject_schema():
+def inject_schema() -> None:
+    """
+    Connects to the PostgreSQL database and executes the data warehouse DDL scripts.
+    
+    This function provisions isolated schemas, constructs dimensional models for
+    locations and dates, constructs the telemetry fact table, and sets up indexes.
+    It will gracefully rollback transactions in case of an execution fault.
+    
+    Raises:
+        psycopg2.Error: If the database connection or execution fails.
+    """
     conn = None
     try:
         db_name = os.getenv("DB_NAME")
@@ -104,7 +123,7 @@ def inject_schema():
         print("Connection established. Injecting Isolated Schema tables and indexes...")
         
         # Execute schema definition DDL
-        cursor.execute(schema_sql)
+        cursor.execute(SCHEMA_SQL)
         
         # Commit database transaction
         conn.commit()
