@@ -144,53 +144,109 @@ def user_login(user: UserAuth):
 @app.get("/api/analytics/dashboard")
 def get_dashboard_analytics(
     city: str = "Islamabad - Core",
-    range: str = Query("168", description="Time range in hours (e.g. 24, 168, 336, 720) or 'all' for daily aggregates")
+    range: str = Query("168", description="Time range in hours (e.g. 24, 168, 336, 720) or 'all'"),
+    start_date: str = Query(None, description="Format: YYYY-MM-DD"),
+    end_date: str = Query(None, description="Format: YYYY-MM-DD"),
+    year: str = Query(None, description="Specific year (e.g. 2015)")
 ):
-    """Calculates summary KPIs and returns time-series chart data arrays optimized for performance."""
+    """Calculates summary KPIs and returns time-series chart data arrays optimized for performance and custom ranges."""
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
             
-            # Determine limit configuration
-            is_all_range = (range == "all")
+            # Determine filtering mode
+            use_custom_filters = bool(start_date or end_date or year)
+            
+            # Build conditions list
+            conditions = ["l.city_name = %s"]
+            query_params = [city]
+            
+            # Determine if we should aggregate daily to save memory
+            is_daily_aggregate = False
             limit_hours = 168
-            if not is_all_range:
-                try:
-                    limit_hours = int(range)
-                except ValueError:
-                    limit_hours = 168
-
-            # Query 1: Calculate summary KPIs matching the time horizon
-            if is_all_range:
-                kpi_query = """
+            
+            if use_custom_filters:
+                if year:
+                    conditions.append("t.recorded_at >= %s AND t.recorded_at <= %s")
+                    query_params.append(f"{year}-01-01 00:00:00")
+                    query_params.append(f"{year}-12-31 23:59:59")
+                    is_daily_aggregate = True  # A full year is 8,760 hours, aggregate daily to keep charts responsive
+                else:
+                    if start_date:
+                        conditions.append("t.recorded_at >= %s")
+                        query_params.append(f"{start_date} 00:00:00")
+                    if end_date:
+                        conditions.append("t.recorded_at <= %s")
+                        query_params.append(f"{end_date} 23:59:59")
+                    
+                    # Calculate difference to see if we aggregate daily
+                    # For simplicity, if both start_date and end_date are provided and the date range is > 45 days, aggregate daily
+                    if start_date and end_date:
+                        from datetime import datetime
+                        try:
+                            d1 = datetime.strptime(start_date, "%Y-%m-%d")
+                            d2 = datetime.strptime(end_date, "%Y-%m-%d")
+                            if (d2 - d1).days > 45:
+                                is_daily_aggregate = True
+                        except Exception:
+                            pass
+            else:
+                if range == "all":
+                    is_daily_aggregate = True
+                else:
+                    # Relative hours range
+                    try:
+                        limit_hours = int(range)
+                    except ValueError:
+                        limit_hours = 168
+            
+            where_clause = " WHERE " + " AND ".join(conditions)
+            
+            # Query 1: Calculate summary KPIs matching the filtered dataset
+            if use_custom_filters:
+                kpi_query = f"""
                     SELECT 
-                        MAX(temperature_celsius) as max_temp,
-                        MIN(temperature_celsius) as min_temp,
-                        ROUND(AVG(humidity_percentage), 2) as avg_humidity,
-                        COUNT(fact_key) as total_records
+                        MAX(t.temperature_celsius) as max_temp,
+                        MIN(t.temperature_celsius) as min_temp,
+                        ROUND(AVG(t.humidity_percentage), 2) as avg_humidity,
+                        COUNT(t.fact_key) as total_records
                     FROM telemetry.fact_climate_telemetry t
                     JOIN telemetry.dim_locations l ON t.location_key = l.location_key
-                    WHERE l.city_name = %s;
+                    {where_clause};
                 """
-                cursor.execute(kpi_query, (city,))
+                cursor.execute(kpi_query, tuple(query_params))
             else:
-                kpi_query = """
-                    SELECT 
-                        MAX(sub.temperature_celsius) as max_temp,
-                        MIN(sub.temperature_celsius) as min_temp,
-                        ROUND(AVG(sub.humidity_percentage), 2) as avg_humidity,
-                        COUNT(sub.fact_key) as total_records
-                    FROM (
-                        SELECT t.fact_key, t.temperature_celsius, t.humidity_percentage
+                # Use standard relative hours query
+                if range == "all":
+                    kpi_query = """
+                        SELECT 
+                            MAX(temperature_celsius) as max_temp,
+                            MIN(temperature_celsius) as min_temp,
+                            ROUND(AVG(humidity_percentage), 2) as avg_humidity,
+                            COUNT(fact_key) as total_records
                         FROM telemetry.fact_climate_telemetry t
                         JOIN telemetry.dim_locations l ON t.location_key = l.location_key
-                        WHERE l.city_name = %s
-                        ORDER BY t.recorded_at DESC
-                        LIMIT %s
-                    ) sub;
-                """
-                cursor.execute(kpi_query, (city, limit_hours))
-                
+                        WHERE l.city_name = %s;
+                    """
+                    cursor.execute(kpi_query, (city,))
+                else:
+                    kpi_query = """
+                        SELECT 
+                            MAX(sub.temperature_celsius) as max_temp,
+                            MIN(sub.temperature_celsius) as min_temp,
+                            ROUND(AVG(sub.humidity_percentage), 2) as avg_humidity,
+                            COUNT(sub.fact_key) as total_records
+                        FROM (
+                            SELECT t.fact_key, t.temperature_celsius, t.humidity_percentage
+                            FROM telemetry.fact_climate_telemetry t
+                            JOIN telemetry.dim_locations l ON t.location_key = l.location_key
+                            WHERE l.city_name = %s
+                            ORDER BY t.recorded_at DESC
+                            LIMIT %s
+                        ) sub;
+                    """
+                    cursor.execute(kpi_query, (city, limit_hours))
+                    
             kpis = cursor.fetchone()
             
             # Handle empty database scenario gracefully
@@ -202,9 +258,9 @@ def get_dashboard_analytics(
                 }
                 
             # Query 2: Extract timeline metrics
-            if is_all_range:
-                # To prevent memory issues with 1M rows, we aggregate daily at the database level!
-                timeline_query = """
+            if is_daily_aggregate:
+                # Group daily
+                timeline_query = f"""
                     SELECT 
                         d.full_date,
                         ROUND(AVG(t.temperature_celsius), 2) as avg_temp,
@@ -216,11 +272,11 @@ def get_dashboard_analytics(
                     FROM telemetry.fact_climate_telemetry t
                     JOIN telemetry.dim_locations l ON t.location_key = l.location_key
                     JOIN telemetry.dim_date d ON t.date_key = d.date_key
-                    WHERE l.city_name = %s
+                    {where_clause}
                     GROUP BY d.full_date, d.day_of_week
                     ORDER BY d.full_date ASC;
                 """
-                cursor.execute(timeline_query, (city,))
+                cursor.execute(timeline_query, tuple(query_params))
                 rows = cursor.fetchall()
                 timeline_data = [
                     {
@@ -235,9 +291,9 @@ def get_dashboard_analytics(
                     for row in rows
                 ]
             else:
-                # Fetch hourly metrics limited to the requested number of hours
-                timeline_query = """
-                    SELECT * FROM (
+                if use_custom_filters:
+                    # Return hourly records for the custom range (no offset, just sorted ascending)
+                    timeline_query = f"""
                         SELECT 
                             t.recorded_at, 
                             t.temperature_celsius, 
@@ -249,13 +305,33 @@ def get_dashboard_analytics(
                         FROM telemetry.fact_climate_telemetry t
                         JOIN telemetry.dim_locations l ON t.location_key = l.location_key
                         JOIN telemetry.dim_date d ON t.date_key = d.date_key
-                        WHERE l.city_name = %s
-                        ORDER BY t.recorded_at DESC
-                        LIMIT %s
-                    ) sub
-                    ORDER BY sub.recorded_at ASC;
-                """
-                cursor.execute(timeline_query, (city, limit_hours))
+                        {where_clause}
+                        ORDER BY t.recorded_at ASC;
+                    """
+                    cursor.execute(timeline_query, tuple(query_params))
+                else:
+                    # Fetch relative hourly metrics
+                    timeline_query = """
+                        SELECT * FROM (
+                            SELECT 
+                                t.recorded_at, 
+                                t.temperature_celsius, 
+                                t.humidity_percentage,
+                                t.precipitation_mm,
+                                t.cloud_cover_percentage,
+                                t.wind_speed_kmh,
+                                d.day_of_week
+                            FROM telemetry.fact_climate_telemetry t
+                            JOIN telemetry.dim_locations l ON t.location_key = l.location_key
+                            JOIN telemetry.dim_date d ON t.date_key = d.date_key
+                            WHERE l.city_name = %s
+                            ORDER BY t.recorded_at DESC
+                            LIMIT %s
+                        ) sub
+                        ORDER BY sub.recorded_at ASC;
+                    """
+                    cursor.execute(timeline_query, (city, limit_hours))
+                    
                 rows = cursor.fetchall()
                 timeline_data = [
                     {
@@ -294,36 +370,62 @@ def get_dashboard_analytics(
 def explore_raw_data(
     city: str = "Islamabad - Core", 
     start_date: str = Query(None, description="Format: YYYY-MM-DD"),
-    end_date: str = Query(None, description="Format: YYYY-MM-DD")
+    end_date: str = Query(None, description="Format: YYYY-MM-DD"),
+    page: int = Query(1, ge=1, description="Page number for pagination"),
+    limit: int = Query(50, ge=1, le=100, description="Number of records per page"),
+    year: str = Query(None, description="Specific year to filter (e.g. 1996)")
 ):
-    """Provides server-side dynamic filtering for the raw table records view."""
+    """Provides index-optimized server-side pagination and dynamic filtering for the raw table records view."""
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
             
-            # Build dynamic relational filtering base query targeting the Star Schema
-            base_query = """
+            # Base query conditions
+            conditions = ["l.city_name = %s"]
+            query_params = [city]
+            
+            if start_date:
+                conditions.append("t.recorded_at >= %s")
+                query_params.append(f"{start_date} 00:00:00")
+            if end_date:
+                conditions.append("t.recorded_at <= %s")
+                query_params.append(f"{end_date} 23:59:59")
+            if year:
+                # Optimized range check to ensure PostgreSQL utilizes indexes on recorded_at
+                conditions.append("t.recorded_at >= %s AND t.recorded_at <= %s")
+                query_params.append(f"{year}-01-01 00:00:00")
+                query_params.append(f"{year}-12-31 23:59:59")
+                
+            where_clause = " WHERE " + " AND ".join(conditions)
+            
+            # 1. Fetch total count matching conditions
+            count_query = f"""
+                SELECT COUNT(t.fact_key)
+                FROM telemetry.fact_climate_telemetry t
+                JOIN telemetry.dim_locations l ON t.location_key = l.location_key
+                {where_clause}
+            """
+            cursor.execute(count_query, tuple(query_params))
+            total_count = cursor.fetchone()[0]
+            
+            # 2. Fetch the paginated records
+            offset = (page - 1) * limit
+            records_query = f"""
                 SELECT 
                     t.fact_key, l.city_name, t.recorded_at, 
                     t.temperature_celsius, t.humidity_percentage,
                     t.precipitation_mm, t.cloud_cover_percentage, t.wind_speed_kmh
                 FROM telemetry.fact_climate_telemetry t
                 JOIN telemetry.dim_locations l ON t.location_key = l.location_key
-                WHERE l.city_name = %s
+                {where_clause}
+                ORDER BY t.recorded_at DESC
+                LIMIT %s OFFSET %s;
             """
-            query_params = [city]
+            # Append limit and offset to parameters
+            run_params = list(query_params)
+            run_params.extend([limit, offset])
             
-            # Append runtime date string parameters dynamically
-            if start_date:
-                base_query += " AND t.recorded_at >= %s"
-                query_params.append(f"{start_date} 00:00:00")
-            if end_date:
-                base_query += " AND t.recorded_at <= %s"
-                query_params.append(f"{end_date} 23:59:59")
-                
-            base_query += " ORDER BY t.recorded_at DESC LIMIT 1000;"
-            
-            cursor.execute(base_query, tuple(query_params))
+            cursor.execute(records_query, tuple(run_params))
             rows = cursor.fetchall()
             cursor.close()
             
@@ -340,7 +442,13 @@ def explore_raw_data(
                     "wind_speed": float(row[7])
                 })
                 
-            return {"records_count": len(table_records), "records": table_records}
+            return {
+                "total_count": total_count,
+                "page": page,
+                "limit": limit,
+                "total_pages": (total_count + limit - 1) // limit,
+                "records": table_records
+            }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Explorer filtration failure: {str(e)}")
 

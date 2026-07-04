@@ -393,7 +393,53 @@
                             <option value="336">Last 14 Days</option>
                             <option value="720">Last 30 Days</option>
                             <option value="all">All Available Data</option>
+                            <option value="custom">Custom Filters</option>
                         </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Specific Year</label>
+                        <select id="yearSelector">
+                            <option value="">All Years</option>
+                            <option value="2026">2026</option>
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                            <option value="2023">2023</option>
+                            <option value="2022">2022</option>
+                            <option value="2021">2021</option>
+                            <option value="2020">2020</option>
+                            <option value="2019">2019</option>
+                            <option value="2018">2018</option>
+                            <option value="2017">2017</option>
+                            <option value="2016">2016</option>
+                            <option value="2015">2015</option>
+                            <option value="2014">2014</option>
+                            <option value="2013">2013</option>
+                            <option value="2012">2012</option>
+                            <option value="2011">2011</option>
+                            <option value="2010">2010</option>
+                            <option value="2009">2009</option>
+                            <option value="2008">2008</option>
+                            <option value="2007">2007</option>
+                            <option value="2006">2006</option>
+                            <option value="2005">2005</option>
+                            <option value="2004">2004</option>
+                            <option value="2003">2003</option>
+                            <option value="2002">2002</option>
+                            <option value="2001">2001</option>
+                            <option value="2000">2000</option>
+                            <option value="1999">1999</option>
+                            <option value="1998">1998</option>
+                            <option value="1997">1997</option>
+                            <option value="1996">1996</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Start Date</label>
+                        <input type="date" id="startDate">
+                    </div>
+                    <div class="control-group">
+                        <label>End Date</label>
+                        <input type="date" id="endDate">
                     </div>
                     <div class="control-group">
                         <label>Aggregation</label>
@@ -578,14 +624,27 @@
             });
         }
 
-        // Backend fetching with dynamic range support
+        // Backend fetching with dynamic range and filter support
         function fetchDashboardData() {
             const range = document.getElementById('rangeSelector').value;
+            const year = document.getElementById('yearSelector').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
             const welcomeText = document.getElementById('welcomeText');
-            const originalWelcome = welcomeText.innerText;
+            
             welcomeText.innerText = "Syncing with cloud database...";
             
-            fetch(`https://meteosync.onrender.com/api/analytics/dashboard?city=Islamabad - Core&range=${range}`)
+            let url = `https://meteosync.onrender.com/api/analytics/dashboard?city=Islamabad - Core`;
+            if (range !== 'custom') {
+                url += `&range=${range}`;
+            } else {
+                url += `&range=all`; // fallback
+            }
+            if (year) url += `&year=${year}`;
+            if (startDate) url += `&start_date=${startDate}`;
+            if (endDate) url += `&end_date=${endDate}`;
+            
+            fetch(url)
                 .then(res => res.json())
                 .then(payload => {
                     welcomeText.innerText = `Welcome back, ${sessionStorage.getItem('username')}`;
@@ -602,7 +661,32 @@
         fetchDashboardData();
 
         document.getElementById('metricSelector').addEventListener('change', processData);
-        document.getElementById('rangeSelector').addEventListener('change', fetchDashboardData);
+        
+        document.getElementById('rangeSelector').addEventListener('change', () => {
+            // Relative range select: Clear custom selectors
+            document.getElementById('yearSelector').value = "";
+            document.getElementById('startDate').value = "";
+            document.getElementById('endDate').value = "";
+            fetchDashboardData();
+        });
+        
+        document.getElementById('yearSelector').addEventListener('change', () => {
+            // Specific year select: Override time horizon and dates
+            document.getElementById('rangeSelector').value = "custom";
+            document.getElementById('startDate').value = "";
+            document.getElementById('endDate').value = "";
+            fetchDashboardData();
+        });
+        
+        const handleCustomDateChange = () => {
+            // Custom date select: Override time horizon and year dropdown
+            document.getElementById('rangeSelector').value = "custom";
+            document.getElementById('yearSelector').value = "";
+            fetchDashboardData();
+        };
+        document.getElementById('startDate').addEventListener('change', handleCustomDateChange);
+        document.getElementById('endDate').addEventListener('change', handleCustomDateChange);
+        
         document.getElementById('granularitySelector').addEventListener('change', processData);
 
     </script>

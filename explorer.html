@@ -432,6 +432,40 @@
             </div>
 
             <div class="filters">
+                <select id="yearSelector" title="Filter by Year">
+                    <option value="">All Years</option>
+                    <option value="2026">2026</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                    <option value="2022">2022</option>
+                    <option value="2021">2021</option>
+                    <option value="2020">2020</option>
+                    <option value="2019">2019</option>
+                    <option value="2018">2018</option>
+                    <option value="2017">2017</option>
+                    <option value="2016">2016</option>
+                    <option value="2015">2015</option>
+                    <option value="2014">2014</option>
+                    <option value="2013">2013</option>
+                    <option value="2012">2012</option>
+                    <option value="2011">2011</option>
+                    <option value="2010">2010</option>
+                    <option value="2009">2009</option>
+                    <option value="2008">2008</option>
+                    <option value="2007">2007</option>
+                    <option value="2006">2006</option>
+                    <option value="2005">2005</option>
+                    <option value="2004">2004</option>
+                    <option value="2003">2003</option>
+                    <option value="2002">2002</option>
+                    <option value="2001">2001</option>
+                    <option value="2000">2000</option>
+                    <option value="1999">1999</option>
+                    <option value="1998">1998</option>
+                    <option value="1997">1997</option>
+                    <option value="1996">1996</option>
+                </select>
                 <input type="date" id="startDate" title="Start Date">
                 <input type="date" id="endDate" title="End Date">
                 <select id="sortOrder">
@@ -490,21 +524,43 @@
         let rawRecords = [];
         let filteredRecords = [];
         let currentPage = 1;
-        const rowsPerPage = 50; // Increased for better data density in enterprise view
+        let totalPages = 1;
+        const rowsPerPage = 50;
 
-        function fetchLedgerData() {
+        function fetchLedgerData(page = 1) {
+            currentPage = page;
             const startDate = document.getElementById('startDate').value;
             const endDate = document.getElementById('endDate').value;
+            const year = document.getElementById('yearSelector').value;
             
-            let url = 'https://meteosync.onrender.com/api/explorer/data?city=Islamabad - Core';
+            let url = `https://meteosync.onrender.com/api/explorer/data?city=Islamabad - Core&page=${currentPage}&limit=${rowsPerPage}`;
             if (startDate) url += `&start_date=${startDate}`;
             if (endDate) url += `&end_date=${endDate}`;
+            if (year) url += `&year=${year}`;
+
+            // Show loading state in the grid
+            document.getElementById('tableBody').innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 40px; color:#94a3b8;">Fetching records from cloud...</td></tr>`;
 
             fetch(url)
                 .then(res => res.json())
                 .then(payload => {
                     rawRecords = payload.records;
+                    totalPages = payload.total_pages;
+                    
+                    // Render current page content
                     applyFiltersAndSearch();
+                    
+                    // Render page control stats using backend metadata
+                    const totalCount = payload.total_count;
+                    const startIndex = (currentPage - 1) * rowsPerPage;
+                    const endIndex = startIndex + rawRecords.length;
+                    
+                    document.getElementById('pageInfo').innerText = totalCount > 0 
+                        ? `Showing ${startIndex + 1} to ${endIndex} of ${totalCount} entries`
+                        : "Showing 0 entries";
+                        
+                    document.getElementById('prevBtn').disabled = (currentPage === 1);
+                    document.getElementById('nextBtn').disabled = (currentPage === totalPages || totalPages === 0);
                 })
                 .catch(err => {
                     document.getElementById('tableBody').innerHTML = `<tr><td colspan="8" style="color:#ef4444; text-align:center;">Database connection failed. Is Uvicorn running?</td></tr>`;
@@ -515,6 +571,7 @@
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const sortMode = document.getElementById('sortOrder').value;
 
+            // Search within the current page records
             filteredRecords = rawRecords.filter(row => {
                 return (
                     row.record_id.toString().includes(searchTerm) ||
@@ -523,6 +580,7 @@
                 );
             });
 
+            // Sort
             if (sortMode === 'newest') filteredRecords.sort((a, b) => new Date(b.recorded_at) - new Date(a.recorded_at));
             if (sortMode === 'oldest') filteredRecords.sort((a, b) => new Date(a.recorded_at) - new Date(b.recorded_at));
             if (sortMode === 'highTemp') filteredRecords.sort((a, b) => b.temperature - a.temperature);
@@ -530,8 +588,7 @@
             if (sortMode === 'highPrecip') filteredRecords.sort((a, b) => b.precipitation - a.precipitation);
             if (sortMode === 'highWind') filteredRecords.sort((a, b) => b.wind_speed - a.wind_speed);
 
-            currentPage = 1;
-            renderPaginatedTable();
+            renderTableRows(filteredRecords);
         }
 
         // Modern Badge Engine
@@ -541,61 +598,43 @@
             return `<span class="badge badge-cool">${temp}°C</span>`;
         }
 
-        function renderPaginatedTable() {
+        function renderTableRows(records) {
             const tableBody = document.getElementById('tableBody');
-            const prevBtn = document.getElementById('prevBtn');
-            const nextBtn = document.getElementById('nextBtn');
-            const pageInfo = document.getElementById('pageInfo');
-
             tableBody.innerHTML = '';
 
-            if (filteredRecords.length === 0) {
+            if (records.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 40px; color:#94a3b8;">No matching records found.</td></tr>`;
-                pageInfo.innerText = "Showing 0 entries";
-                prevBtn.disabled = true;
-                nextBtn.disabled = true;
                 return;
             }
 
-            const totalPages = Math.ceil(filteredRecords.length / rowsPerPage);
-            const startIndex = (currentPage - 1) * rowsPerPage;
-            const endIndex = startIndex + rowsPerPage;
-            const recordsToDisplay = filteredRecords.slice(startIndex, endIndex);
-
-            recordsToDisplay.forEach(row => {
+            records.forEach(row => {
                 const tempBadge = getTempBadge(row.temperature);
                 const precipFmt = row.precipitation > 0 ? `<span class="metric-highlight">${row.precipitation} mm</span>` : `<span style="color:var(--text-secondary)">0.0 mm</span>`;
                 const windFmt = row.wind_speed > 20 ? `<span class="metric-highlight">${row.wind_speed} km/h</span>` : `${row.wind_speed} km/h`;
 
                 tableBody.innerHTML += `
-                <tr>
-                    <td style="color:var(--text-secondary)">#${row.record_id}</td>
-                    <td>${row.city_name}</td>
-                    <td style="color:var(--text-secondary)">${row.recorded_at}</td>
-                    <td>${tempBadge}</td>
-                    <td>${row.humidity}%</td>
-                    <td>${precipFmt}</td>
-                    <td>${windFmt}</td>
-                    <td>${row.cloud_cover}%</td>
-                </tr>
-            `;
+                    <tr>
+                        <td style="color:var(--text-secondary)">#${row.record_id}</td>
+                        <td>${row.city_name}</td>
+                        <td style="color:var(--text-secondary)">${row.recorded_at}</td>
+                        <td>${tempBadge}</td>
+                        <td>${row.humidity}%</td>
+                        <td>${precipFmt}</td>
+                        <td>${windFmt}</td>
+                        <td>${row.cloud_cover}%</td>
+                    </tr>
+                `;
             });
-
-            pageInfo.innerText = `Showing ${startIndex + 1} to ${Math.min(endIndex, filteredRecords.length)} of ${filteredRecords.length} entries`;
-            prevBtn.disabled = currentPage === 1;
-            nextBtn.disabled = currentPage === totalPages;
         }
 
-        document.getElementById('prevBtn').addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderPaginatedTable(); } });
-        document.getElementById('nextBtn').addEventListener('click', () => {
-            const totalPages = Math.ceil(filteredRecords.length / rowsPerPage);
-            if (currentPage < totalPages) { currentPage++; renderPaginatedTable(); }
-        });
+        document.getElementById('prevBtn').addEventListener('click', () => { if (currentPage > 1) { fetchLedgerData(currentPage - 1); } });
+        document.getElementById('nextBtn').addEventListener('click', () => { if (currentPage < totalPages) { fetchLedgerData(currentPage + 1); } });
 
         document.getElementById('searchInput').addEventListener('input', applyFiltersAndSearch);
         document.getElementById('sortOrder').addEventListener('change', applyFiltersAndSearch);
-        document.getElementById('startDate').addEventListener('change', fetchLedgerData);
-        document.getElementById('endDate').addEventListener('change', fetchLedgerData);
+        document.getElementById('startDate').addEventListener('change', () => fetchLedgerData(1));
+        document.getElementById('endDate').addEventListener('change', () => fetchLedgerData(1));
+        document.getElementById('yearSelector').addEventListener('change', () => fetchLedgerData(1));
 
         document.getElementById('exportCsvBtn').addEventListener('click', () => {
             if (filteredRecords.length === 0) return alert("No data to export.");
