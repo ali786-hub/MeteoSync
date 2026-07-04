@@ -423,14 +423,9 @@
 
         function processData() {
             const metric = document.getElementById('metricSelector').value;
-            const range = document.getElementById('rangeSelector').value;
             const granularity = document.getElementById('granularitySelector').value;
 
             let filteredData = globalData;
-            if (range !== 'all') {
-                const hoursToKeep = parseInt(range);
-                filteredData = globalData.slice(-hoursToKeep);
-            }
 
             let processedLabels = [];
             let processedValues = [];
@@ -583,21 +578,31 @@
             });
         }
 
-        // Backend fetching
-        fetch('https://meteosync.onrender.com/api/analytics/dashboard?city=Islamabad - Core')
+        // Backend fetching with dynamic range support
+        function fetchDashboardData() {
+            const range = document.getElementById('rangeSelector').value;
+            const welcomeText = document.getElementById('welcomeText');
+            const originalWelcome = welcomeText.innerText;
+            welcomeText.innerText = "Syncing with cloud database...";
+            
+            fetch(`https://meteosync.onrender.com/api/analytics/dashboard?city=Islamabad - Core&range=${range}`)
+                .then(res => res.json())
+                .then(payload => {
+                    welcomeText.innerText = `Welcome back, ${sessionStorage.getItem('username')}`;
+                    globalData = payload.timeline;
+                    processData();
+                })
+                .catch(err => {
+                    console.error('Data pipeline error:', err);
+                    welcomeText.innerText = "Cloud Connection Offline";
+                });
+        }
 
-            .then(res => res.json())
-            .then(payload => {
-                globalData = payload.timeline;
-                processData();
-            })
-            .catch(err => {
-                console.error('Data pipeline error:', err);
-                alert("Failed to connect to backend server.");
-            });
+        // Initial fetch
+        fetchDashboardData();
 
         document.getElementById('metricSelector').addEventListener('change', processData);
-        document.getElementById('rangeSelector').addEventListener('change', processData);
+        document.getElementById('rangeSelector').addEventListener('change', fetchDashboardData);
         document.getElementById('granularitySelector').addEventListener('change', processData);
 
     </script>

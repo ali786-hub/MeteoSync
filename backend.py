@@ -142,68 +142,136 @@ def user_login(user: UserAuth):
 # ==========================================
 
 @app.get("/api/analytics/dashboard")
-def get_dashboard_analytics(city: str = "Islamabad - Core"):
-    """Calculates summary KPIs and returns time-series chart data arrays."""
+def get_dashboard_analytics(
+    city: str = "Islamabad - Core",
+    range: str = Query("168", description="Time range in hours (e.g. 24, 168, 336, 720) or 'all' for daily aggregates")
+):
+    """Calculates summary KPIs and returns time-series chart data arrays optimized for performance."""
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
             
-            # Query 1: Calculate high-level summary metadata (KPI box cards)
-            kpi_query = """
-                SELECT 
-                    MAX(temperature_celsius) as max_temp,
-                    MIN(temperature_celsius) as min_temp,
-                    ROUND(AVG(humidity_percentage), 2) as avg_humidity,
-                    COUNT(fact_key) as total_records
-                FROM telemetry.fact_climate_telemetry t
-                JOIN telemetry.dim_locations l ON t.location_key = l.location_key
-                WHERE l.city_name = %s;
-            """
-            cursor.execute(kpi_query, (city,))
+            # Determine limit configuration
+            is_all_range = (range == "all")
+            limit_hours = 168
+            if not is_all_range:
+                try:
+                    limit_hours = int(range)
+                except ValueError:
+                    limit_hours = 168
+
+            # Query 1: Calculate summary KPIs matching the time horizon
+            if is_all_range:
+                kpi_query = """
+                    SELECT 
+                        MAX(temperature_celsius) as max_temp,
+                        MIN(temperature_celsius) as min_temp,
+                        ROUND(AVG(humidity_percentage), 2) as avg_humidity,
+                        COUNT(fact_key) as total_records
+                    FROM telemetry.fact_climate_telemetry t
+                    JOIN telemetry.dim_locations l ON t.location_key = l.location_key
+                    WHERE l.city_name = %s;
+                """
+                cursor.execute(kpi_query, (city,))
+            else:
+                kpi_query = """
+                    SELECT 
+                        MAX(sub.temperature_celsius) as max_temp,
+                        MIN(sub.temperature_celsius) as min_temp,
+                        ROUND(AVG(sub.humidity_percentage), 2) as avg_humidity,
+                        COUNT(sub.fact_key) as total_records
+                    FROM (
+                        SELECT t.fact_key, t.temperature_celsius, t.humidity_percentage
+                        FROM telemetry.fact_climate_telemetry t
+                        JOIN telemetry.dim_locations l ON t.location_key = l.location_key
+                        WHERE l.city_name = %s
+                        ORDER BY t.recorded_at DESC
+                        LIMIT %s
+                    ) sub;
+                """
+                cursor.execute(kpi_query, (city, limit_hours))
+                
             kpis = cursor.fetchone()
             
             # Handle empty database scenario gracefully
-            if kpis[3] == 0:
+            if not kpis or kpis[3] == 0:
                 return {
                     "city": city,
                     "summary": {"max_temp": 0, "min_temp": 0, "avg_humidity": 0, "total_records": 0},
                     "timeline": []
                 }
                 
-            # Query 2: Extract ALL 5 METRICS for the frontend charting engine
-            # We also join with our dim_date table to return day_of_week context!
-            timeline_query = """
-                SELECT 
-                    t.recorded_at, 
-                    t.temperature_celsius, 
-                    t.humidity_percentage,
-                    t.precipitation_mm,
-                    t.cloud_cover_percentage,
-                    t.wind_speed_kmh,
-                    d.day_of_week
-                FROM telemetry.fact_climate_telemetry t
-                JOIN telemetry.dim_locations l ON t.location_key = l.location_key
-                JOIN telemetry.dim_date d ON t.date_key = d.date_key
-                WHERE l.city_name = %s
-                ORDER BY t.recorded_at ASC;
-            """
-            cursor.execute(timeline_query, (city,))
-            rows = cursor.fetchall()
+            # Query 2: Extract timeline metrics
+            if is_all_range:
+                # To prevent memory issues with 1M rows, we aggregate daily at the database level!
+                timeline_query = """
+                    SELECT 
+                        d.full_date,
+                        ROUND(AVG(t.temperature_celsius), 2) as avg_temp,
+                        ROUND(AVG(t.humidity_percentage), 2) as avg_humid,
+                        ROUND(SUM(t.precipitation_mm), 2) as total_precip,
+                        ROUND(AVG(t.cloud_cover_percentage), 2) as avg_cloud,
+                        ROUND(AVG(t.wind_speed_kmh), 2) as avg_wind,
+                        d.day_of_week
+                    FROM telemetry.fact_climate_telemetry t
+                    JOIN telemetry.dim_locations l ON t.location_key = l.location_key
+                    JOIN telemetry.dim_date d ON t.date_key = d.date_key
+                    WHERE l.city_name = %s
+                    GROUP BY d.full_date, d.day_of_week
+                    ORDER BY d.full_date ASC;
+                """
+                cursor.execute(timeline_query, (city,))
+                rows = cursor.fetchall()
+                timeline_data = [
+                    {
+                        "timestamp": row[0].strftime("%Y-%m-%d"),
+                        "temperature": float(row[1]),
+                        "humidity": float(row[2]),
+                        "precipitation": float(row[3]),
+                        "cloud_cover": float(row[4]),
+                        "wind_speed": float(row[5]),
+                        "day_of_week": row[6]
+                    }
+                    for row in rows
+                ]
+            else:
+                # Fetch hourly metrics limited to the requested number of hours
+                timeline_query = """
+                    SELECT * FROM (
+                        SELECT 
+                            t.recorded_at, 
+                            t.temperature_celsius, 
+                            t.humidity_percentage,
+                            t.precipitation_mm,
+                            t.cloud_cover_percentage,
+                            t.wind_speed_kmh,
+                            d.day_of_week
+                        FROM telemetry.fact_climate_telemetry t
+                        JOIN telemetry.dim_locations l ON t.location_key = l.location_key
+                        JOIN telemetry.dim_date d ON t.date_key = d.date_key
+                        WHERE l.city_name = %s
+                        ORDER BY t.recorded_at DESC
+                        LIMIT %s
+                    ) sub
+                    ORDER BY sub.recorded_at ASC;
+                """
+                cursor.execute(timeline_query, (city, limit_hours))
+                rows = cursor.fetchall()
+                timeline_data = [
+                    {
+                        "timestamp": row[0].strftime("%Y-%m-%d %H:%M"),
+                        "temperature": float(row[1]),
+                        "humidity": float(row[2]),
+                        "precipitation": float(row[3]),
+                        "cloud_cover": float(row[4]),
+                        "wind_speed": float(row[5]),
+                        "day_of_week": row[6]
+                    }
+                    for row in rows
+                ]
+                
             cursor.close()
             
-            # Structure time-series list
-            timeline_data = []
-            for row in rows:
-                timeline_data.append({
-                    "timestamp": row[0].strftime("%Y-%m-%d %H:%M"),
-                    "temperature": float(row[1]),
-                    "humidity": float(row[2]),
-                    "precipitation": float(row[3]),
-                    "cloud_cover": float(row[4]),
-                    "wind_speed": float(row[5]),
-                    "day_of_week": row[6]
-                })
-                
             return {
                 "city": city,
                 "summary": {
@@ -253,7 +321,7 @@ def explore_raw_data(
                 base_query += " AND t.recorded_at <= %s"
                 query_params.append(f"{end_date} 23:59:59")
                 
-            base_query += " ORDER BY t.recorded_at DESC;"
+            base_query += " ORDER BY t.recorded_at DESC LIMIT 1000;"
             
             cursor.execute(base_query, tuple(query_params))
             rows = cursor.fetchall()

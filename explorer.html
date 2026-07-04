@@ -493,8 +493,14 @@
         const rowsPerPage = 50; // Increased for better data density in enterprise view
 
         function fetchLedgerData() {
-            fetch('https://meteosync.onrender.com/api/explorer/data?city=Islamabad - Core')
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            let url = 'https://meteosync.onrender.com/api/explorer/data?city=Islamabad - Core';
+            if (startDate) url += `&start_date=${startDate}`;
+            if (endDate) url += `&end_date=${endDate}`;
 
+            fetch(url)
                 .then(res => res.json())
                 .then(payload => {
                     rawRecords = payload.records;
@@ -508,21 +514,13 @@
         function applyFiltersAndSearch() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const sortMode = document.getElementById('sortOrder').value;
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
 
             filteredRecords = rawRecords.filter(row => {
-                const matchesSearch =
+                return (
                     row.record_id.toString().includes(searchTerm) ||
                     row.recorded_at.toLowerCase().includes(searchTerm) ||
-                    row.temperature.toString().includes(searchTerm);
-
-                let matchesDate = true;
-                const rowDate = row.recorded_at.split(' ')[0];
-                if (startDate && rowDate < startDate) matchesDate = false;
-                if (endDate && rowDate > endDate) matchesDate = false;
-
-                return matchesSearch && matchesDate;
+                    row.temperature.toString().includes(searchTerm)
+                );
             });
 
             if (sortMode === 'newest') filteredRecords.sort((a, b) => new Date(b.recorded_at) - new Date(a.recorded_at));
@@ -596,8 +594,8 @@
 
         document.getElementById('searchInput').addEventListener('input', applyFiltersAndSearch);
         document.getElementById('sortOrder').addEventListener('change', applyFiltersAndSearch);
-        document.getElementById('startDate').addEventListener('change', applyFiltersAndSearch);
-        document.getElementById('endDate').addEventListener('change', applyFiltersAndSearch);
+        document.getElementById('startDate').addEventListener('change', fetchLedgerData);
+        document.getElementById('endDate').addEventListener('change', fetchLedgerData);
 
         document.getElementById('exportCsvBtn').addEventListener('click', () => {
             if (filteredRecords.length === 0) return alert("No data to export.");
